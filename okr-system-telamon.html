@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Q3 OKR Tracker — Executive Team</title>
+<title>Telecom OKR Tracker — Telamon</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Microsoft Authentication Library -->
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <style>
 :root {
   /* Telamon Brand Colors */
@@ -199,6 +201,40 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 </style>
 </head>
 <body>
+
+<!-- LOGIN BANNER -->
+<div id="login-banner" style="display:none;background:#fff;border-bottom:1px solid rgba(99,34,64,0.12);padding:10px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div id="user-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--plum);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;flex-shrink:0;"></div>
+    <div>
+      <div id="user-name" style="font-size:13px;font-weight:600;color:var(--dark-navy);"></div>
+      <div id="sync-status" style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.5px;"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="sync-btn" onclick="syncToSharePoint()" style="background:var(--plum);color:#fff;border:none;border-radius:5px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;">
+      <span>↑</span> Save to SharePoint
+    </button>
+    <button onclick="signOut()" style="background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:5px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">Sign out</button>
+  </div>
+</div>
+
+<!-- SIGN-IN SCREEN -->
+<div id="signin-screen" style="display:none;position:fixed;inset:0;z-index:1000;background:#fff;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="text-align:center;max-width:400px;padding:40px 32px;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:3px;color:var(--plum);margin-bottom:4px;">TELECOM <span style="color:var(--scarlet);">OKR</span></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:32px;">Sign in with your Microsoft 365 account to load and save your OKRs</div>
+    <button onclick="signIn()" style="background:var(--plum);color:#fff;border:none;border-radius:8px;padding:14px 32px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;">
+      <svg width="20" height="20" viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      Sign in with Microsoft
+    </button>
+    <div id="signin-error" style="margin-top:16px;font-size:12px;color:var(--behind);display:none;"></div>
+    <div style="margin-top:24px;padding:16px;background:var(--surface2);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6;text-align:left;">
+      <strong style="color:var(--dark-navy);">Setup required first:</strong><br>
+      An Azure App Registration must be configured by your IT admin before sign-in works. See the <strong>Setup Guide</strong> included with this file.
+    </div>
+  </div>
+</div>
 
 <!-- NAV -->
 <nav class="nav">
@@ -641,27 +677,208 @@ function addObjective() {
   toast('New objective added ✓');
 }
 
-// ── LOCALSTORAGE PERSISTENCE ──────────────────────────────────────────────────
+// ── LOCALSTORAGE FALLBACK ─────────────────────────────────────────────────────
 function saveState() {
-  try {
-    localStorage.setItem('telamon-okr-state', JSON.stringify(state));
-  } catch(e) { console.warn('Could not save to localStorage:', e); }
+  try { localStorage.setItem('telamon-okr-state', JSON.stringify(state)); } catch(e) {}
+  scheduleSPSave();
 }
 
-function loadState() {
+function loadLocalState() {
   try {
     const saved = localStorage.getItem('telamon-okr-state');
     if(saved) {
       const parsed = JSON.parse(saved);
-      // Merge saved data into state, preserving structure
       PEOPLE.forEach(p => {
         if(parsed[p.id]) {
-          state[p.id].okrs = parsed[p.id].okrs || state[p.id].okrs;
+          if(parsed[p.id].okrs) state[p.id].okrs = parsed[p.id].okrs;
           if(parsed[p.id].scorecard) state[p.id].scorecard = parsed[p.id].scorecard;
+          if(parsed[p.id]._spItemId) state[p.id]._spItemId = parsed[p.id]._spItemId;
         }
       });
     }
-  } catch(e) { console.warn('Could not load from localStorage:', e); }
+  } catch(e) {}
+}
+
+// ── SHAREPOINT / GRAPH API INTEGRATION ───────────────────────────────────────
+// ⚙️  CONFIGURATION — fill these in after Azure App Registration setup
+const SP_CONFIG = {
+  clientId:    'e0c4cf02-f967-477f-a034-8c5eb80657a3',
+  tenantId:    'bec0131e-b7d9-4714-96f8-802eed868c44',
+  siteId:      '760cbabc-e6f0-4df0-8d64-000273c69da6',
+  listName:    'TelecomOKRData',
+  redirectUri: window.location.href.split('?')[0],
+};
+
+const SP_CONFIGURED = SP_CONFIG.clientId !== 'YOUR_APP_CLIENT_ID';
+
+let msalInstance = null;
+let currentAccount = null;
+
+function initMSAL() {
+  if(!SP_CONFIGURED) return;
+  try {
+    msalInstance = new msal.PublicClientApplication({
+      auth: {
+        clientId:    SP_CONFIG.clientId,
+        authority:   `https://login.microsoftonline.com/${SP_CONFIG.tenantId}`,
+        redirectUri: SP_CONFIG.redirectUri,
+      },
+      cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: false },
+    });
+    msalInstance.handleRedirectPromise().then(resp => {
+      if(resp) currentAccount = resp.account;
+      checkAuth();
+    }).catch(e => showSigninError(e.message));
+  } catch(e) { console.warn('MSAL init failed:', e); }
+}
+
+function checkAuth() {
+  const accounts = msalInstance ? msalInstance.getAllAccounts() : [];
+  if(accounts.length > 0) {
+    currentAccount = accounts[0];
+    showLoggedIn();
+    loadFromSharePoint();
+  } else {
+    document.getElementById('signin-screen').style.display = 'flex';
+  }
+}
+
+function signIn() {
+  if(!SP_CONFIGURED) { showSigninError('App not configured yet. See Setup Guide.'); return; }
+  msalInstance.loginRedirect({ scopes: ['Sites.ReadWrite.All', 'User.Read'] });
+}
+
+function signOut() {
+  if(msalInstance && currentAccount)
+    msalInstance.logoutRedirect({ account: currentAccount });
+}
+
+function showLoggedIn() {
+  document.getElementById('signin-screen').style.display = 'none';
+  const banner = document.getElementById('login-banner');
+  banner.style.display = 'flex';
+  const name = currentAccount.name || currentAccount.username;
+  const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('user-name').textContent = name;
+  setSyncStatus('Ready');
+}
+
+function showSigninError(msg) {
+  const el = document.getElementById('signin-error');
+  if(el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function setSyncStatus(msg, isError) {
+  const el = document.getElementById('sync-status');
+  if(el) { el.textContent = msg; el.style.color = isError ? 'var(--behind)' : 'var(--muted)'; }
+}
+
+async function getToken() {
+  if(!msalInstance || !currentAccount) return null;
+  try {
+    const r = await msalInstance.acquireTokenSilent({
+      scopes: ['Sites.ReadWrite.All'], account: currentAccount
+    });
+    return r.accessToken;
+  } catch(e) {
+    try {
+      const r = await msalInstance.acquireTokenPopup({ scopes: ['Sites.ReadWrite.All'] });
+      return r.accessToken;
+    } catch(e2) { return null; }
+  }
+}
+
+const GRAPH_BASE = 'https://graph.microsoft.com/v1.0';
+
+async function spRequest(method, path, body) {
+  const token = await getToken();
+  if(!token) throw new Error('Not authenticated');
+  const opts = {
+    method,
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+  };
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${GRAPH_BASE}${path}`, opts);
+  if(!res.ok) { const err = await res.text(); throw new Error(`Graph ${res.status}: ${err}`); }
+  if(res.status === 204) return null;
+  return res.json();
+}
+
+async function loadFromSharePoint() {
+  setSyncStatus('Loading from SharePoint…');
+  try {
+    const data = await spRequest('GET',
+      `/sites/${SP_CONFIG.siteId}/lists/${SP_CONFIG.listName}/items?$expand=fields&$top=50`
+    );
+    if(data && data.value) {
+      data.value.forEach(item => {
+        const pid = item.fields.Title;
+        if(state[pid]) {
+          try {
+            if(item.fields.OKRData) {
+              const okrs = JSON.parse(item.fields.OKRData);
+              if(Array.isArray(okrs)) state[pid].okrs = okrs;
+            }
+            if(item.fields.ScorecardData) {
+              const sc = JSON.parse(item.fields.ScorecardData);
+              if(sc) state[pid].scorecard = sc;
+            }
+            state[pid]._spItemId = item.id;
+          } catch(e) { console.warn('Parse error for', pid, e); }
+        }
+      });
+    }
+    saveState();
+    renderDash();
+    setSyncStatus('Loaded · ' + new Date().toLocaleTimeString());
+  } catch(e) {
+    setSyncStatus('Load failed — using local data', true);
+    console.error('SP load error:', e);
+  }
+}
+
+async function syncToSharePoint() {
+  if(!SP_CONFIGURED || !currentAccount) { toast('Not connected to SharePoint'); return; }
+  const btn = document.getElementById('sync-btn');
+  btn.innerHTML = '⏳ Saving…'; btn.disabled = true;
+  setSyncStatus('Saving…');
+  try {
+    for(const p of PEOPLE) {
+      const ps = state[p.id];
+      const payload = { fields: {
+        Title: p.id,
+        OKRData: JSON.stringify(ps.okrs),
+        ScorecardData: JSON.stringify(ps.scorecard),
+      }};
+      if(ps._spItemId) {
+        await spRequest('PATCH',
+          `/sites/${SP_CONFIG.siteId}/lists/${SP_CONFIG.listName}/items/${ps._spItemId}`,
+          payload);
+      } else {
+        const created = await spRequest('POST',
+          `/sites/${SP_CONFIG.siteId}/lists/${SP_CONFIG.listName}/items`, payload);
+        if(created) state[p.id]._spItemId = created.id;
+      }
+    }
+    try { localStorage.setItem('telamon-okr-state', JSON.stringify(state)); } catch(e) {}
+    setSyncStatus('Saved · ' + new Date().toLocaleTimeString());
+    toast('Saved to SharePoint ✓');
+  } catch(e) {
+    setSyncStatus('Save failed', true);
+    toast('Save failed — see console');
+    console.error('SP save error:', e);
+  } finally {
+    btn.innerHTML = '<span>↑</span> Save to SharePoint';
+    btn.disabled = false;
+  }
+}
+
+let spSaveTimer = null;
+function scheduleSPSave() {
+  if(!SP_CONFIGURED || !currentAccount) return;
+  clearTimeout(spSaveTimer);
+  spSaveTimer = setTimeout(syncToSharePoint, 3000);
 }
 
 
@@ -1132,8 +1349,11 @@ document.addEventListener('input', function(e) {
 });
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-loadState();
+loadLocalState();   // instant render from cache
 showDash();
+if(SP_CONFIGURED) {
+  initMSAL();       // then authenticate & load from SharePoint
+}
 </script>
 </body>
 </html>
