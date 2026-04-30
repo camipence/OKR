@@ -274,22 +274,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="p-chip"><div class="p-dot" style="background:var(--p4)"></div>Enterprise</div>
   </div>
   <div class="section-label">Direct Reports</div>
-
-  <!-- ALEX'S OKRs CARD -->
-  <div id="alex-okr-card" style="margin:0 0 0 0;background:var(--plum);border-radius:0;padding:20px 32px 24px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:4px;">Leadership OKRs — Visible to All</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:#fff;">Alex Paskoff <span style="color:var(--scarlet);">· President</span></div>
-      </div>
-      <button onclick="toggleAlexOKRs()" id="alex-toggle-btn" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;">Hide ▲</button>
-    </div>
-    <div id="alex-okrs-body">
-      <div id="alex-okrs-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;"></div>
-      <button onclick="addAlexOKR()" style="margin-top:12px;background:rgba(255,255,255,0.12);border:1px dashed rgba(255,255,255,0.3);color:rgba(255,255,255,0.7);padding:8px 18px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;width:100%;">+ Add Alex's Objective</button>
-    </div>
-  </div>
-
   <div class="person-grid" id="person-grid"></div>
 </div>
 
@@ -349,12 +333,13 @@ const PEOPLE = [
   {id:'vince',  name:'Vince Damico',        role:'VP Data Center Services',         initials:'VD', av:8},
 ];
 
-// Default OKR template per person
+// Default OKR template per person — placeholder until submissions received
 function defaultOKRs(personId) {
+  // John Rhoden gets the Customer Scorecard objective pre-populated per Alex's directive
   const base = [
-    {id:1, title:'[Click to enter your objective]', priority:'RL/ITAD',    status:'not-started', krs:['Add your first key result','Add your second key result','Add your third key result'], krDone:[false,false,false], timeframe:'Q', critical:false},
-    {id:2, title:'[Click to enter your objective]', priority:'E2E Systems', status:'not-started', krs:['Add your first key result','Add your second key result','Add your third key result'], krDone:[false,false,false], timeframe:'Q', critical:false},
-    {id:3, title:'[Click to enter your objective]', priority:'Enterprise',  status:'not-started', krs:['Add your first key result','Add your second key result','Add your third key result'], krDone:[false,false,false], timeframe:'Q', critical:false},
+    {id:1, title:'[Awaiting Q3 Submission]', priority:'RL/ITAD',    status:'not-started', krs:['Submit objective to team by Friday noon','Align with strategic priority','Define key results']},
+    {id:2, title:'[Awaiting Q3 Submission]', priority:'E2E Systems', status:'not-started', krs:['Submit objective to team by Friday noon','Align with strategic priority','Define key results']},
+    {id:3, title:'[Awaiting Q3 Submission]', priority:'Enterprise',  status:'not-started', krs:['Submit objective to team by Friday noon','Align with strategic priority','Define key results']},
   ];
   if(personId === 'john') {
     base.unshift({
@@ -362,103 +347,32 @@ function defaultOKRs(personId) {
       title:'Develop & implement Customer Scorecard process across all business units',
       priority:'Enterprise',
       status:'not-started',
-      timeframe:'Q',
-      critical:true,
       krs:[
         'Develop Scorecard template with project overview, delivery, quality & customer experience sections',
         'Present final tool to Alex and Stan for approval',
         'Implement across all businesses by start of Q3',
         'Achieve 100% completion adherence — link to commission process',
-      ],
-      krDone:[false,false,false,false],
+      ]
     });
   }
   return base;
 }
 
-// State — pre-populated with real OKR data
+// State
 let state = {};
-
-const SCORECARD_TEMPLATE = {
-  project: {customer:'',projectName:'',projectType:'',projectValue:'',plannedDate:'',actualDate:'',pm:'',sponsor:''},
-  sections: {
-    delivery: {schedule:{score:'',notes:'',drivers:''},budget:{score:'',notes:''}},
-    quality:  {install:{score:'',defect:'',rework:'',firstPass:''},safety:{score:'',incidents:'',nearMiss:''},technical:{score:'',notes:''}},
-    cx:       {comm:{score:'',notes:''},responsiveness:{score:'',notes:''},trust:{score:'',notes:''},quote:''},
-  }
-};
-
-state['jason'] = { scorecard: JSON.parse(JSON.stringify(SCORECARD_TEMPLATE)), okrs: [
-  {id:1, title:'Accelerate Revenue Opportunities', priority:'Enterprise', status:'not-started', timeframe:'Q', critical:false, krs:['Bandwidth deliver $250k in Rev (45 projects complete)','Hire Enterprise quoting role _June','Add 2 new Subcontractors'], krDone:[false,false,false]},
-  {id:2, title:'Operationalize AI Enabled', priority:'Enterprise', status:'not-started', timeframe:'Q', critical:false, krs:['Land AT&T/Lumen Shelter Integration build','Identify Data Center Certifications','Understand Compute Role (Optical)'], krDone:[false,false,false]},
-  {id:3, title:'Improve DC Power execution', priority:'Enterprise', status:'not-started', timeframe:'Q', critical:false, krs:['Submit objective to team by Friday noon','Align with strategic priority','Define key results'], krDone:[false,false,false]},
-  {id:4, title:'Improve DC Power execution', priority:'E2E Systems', status:'not-started', timeframe:'Q', critical:false, krs:['Demonstrate process optimization (Shipping/Storage)','MoM Completions to average 20 per month','Reduce Backlog from 18 to 15 months'], krDone:[false,false,false]},
-]};
-
-state['travis'] = { scorecard: JSON.parse(JSON.stringify(SCORECARD_TEMPLATE)), okrs: [
-  {id:1, title:'[Awaiting Submission]', priority:'RL/ITAD', status:'not-started', timeframe:'Q', critical:false, krs:['Add your first key result','Add your second key result','Add your third key result'], krDone:[false,false,false]},
-  {id:2, title:'[Awaiting Submission]', priority:'E2E Systems', status:'not-started', timeframe:'Q', critical:false, krs:['Add your first key result','Add your second key result','Add your third key result'], krDone:[false,false,false]},
-  {id:3, title:'[Awaiting Submission]', priority:'Enterprise', status:'not-started', timeframe:'Q', critical:false, krs:['Add your first key result','Add your second key result','Add your third key result'], krDone:[false,false,false]},
-]};
-
-state['bryan'] = { scorecard: JSON.parse(JSON.stringify(SCORECARD_TEMPLATE)), okrs: [
-  {id:1, title:'Complete the EVOLVE freight Allocation VSM and corrective actions', priority:'E2E Systems', status:'not-started', timeframe:'Q', critical:false, krs:['Reduce manual labor supporting process by >50%','Reduce unallocated Freight Spend in first pass by >= 90% over historical past 12 months'], krDone:[false,false]},
-  {id:2, title:'First Energy Re-organization', priority:'E2E Systems', status:'not-started', timeframe:'Q', critical:false, krs:['Define and implement new layout to increase storage by 200% AND Cycle Count Accuracy by 100%','Implement production control processes and work plan to improve on-time in-Full SLA by 100%','Align inventory and labor costs to budget objective based on forecasted volumes.'], krDone:[false,false,false]},
-  {id:3, title:'Denton Shelter Program', priority:'E2E Systems', status:'not-started', timeframe:'Q', critical:false, krs:['Define and implement launch layout to support forecasted demand and program facility capacity target by June 1','Implement material management processes that meet on-time and in-full (OTIF) by August 30','Align inventory and labor costs to budget objective based on forecasted volumes by September 30'], krDone:[false,false,false]},
-]};
-
-state['adietz'] = { scorecard: JSON.parse(JSON.stringify(SCORECARD_TEMPLATE)), okrs: [
-  {id:1, title:'Implement WMS for RL', priority:'RL/ITAD', status:'not-started', timeframe:'Q', critical:false, krs:['Negotiate and execute contract','Complete interface mapping','Establish system connectivity','Warehouse setups','Go-Live by 6/30'], krDone:[false,false,false,false,false]},
-  {id:2, title:'Launch Trial Rev-share Program with Verizon', priority:'RL/ITAD', status:'not-started', timeframe:'Q', critical:false, krs:['Negotiate and execute contract','Ramp triage/test/sort throughput capacity','Establish additional sales channels'], krDone:[false,false,false]},
-]};
-
-state['awang'] = { scorecard: JSON.parse(JSON.stringify(SCORECARD_TEMPLATE)), okrs: [
-  {id:1, title:'Elevate technical skillset in supporting datacenter\'s network systems', priority:'AI Infra', status:'not-started', timeframe:'Q', critical:false, krs:['Elevate technical skillset in supporting Ciena\'s next-gen systems based on their recent NVIDIA proposal (RLS & Waveserver)','Establish HPE partnership agreement and identify training path geared towards data-center ecosystems (beyond current Juniper MX product portfolio)'], krDone:[false,false]},
-  {id:2, title:'Expand / Solidify Enterprise offering', priority:'Enterprise', status:'not-started', timeframe:'Q', critical:false, krs:['Partnering with Supply-Chain to solidify First Energy team\'s operational process and production quality','Re-engage with Ciena account team to establish Telamon\'s go-to-market plan for the Enterprise (Power Utility) customers.','Begin customer pre-sale engagement and identify proposal opportunities'], krDone:[false,false,false]},
-  {id:3, title:'Streamline First Energy Data and Systems', priority:'E2E Systems', status:'not-started', timeframe:'Q', critical:false, krs:['Consolidate project initiation and tracking process to utilize Customer\'s Scores system','Integrate with customer\'s procurement platform, COUPA, to automate order on-boarding and invoicing processes','Establish disciplines in Forecasting, Min-Max, MRP and Consumption standard routines in Oracle'], krDone:[false,false,false]},
-]};
-
-state['mark'] = { scorecard: JSON.parse(JSON.stringify(SCORECARD_TEMPLATE)), okrs: [
-  {id:1, title:'Establish ITAD as a credible enterprise offering anchored in existing Telamon relationships', priority:'RL/ITAD', status:'not-started', timeframe:'Annual', critical:false, krs:['Complete Acquisition of Retire-IT','Finalize ITAD value proposition and define ICP segments','Align ITAD offering with RETIRE IT and Telamon capabilities','Define enterprise sales narrative and solution framework','Conduct initial executive discovery conversations to support early pipeline development','Align account management incentives to drive ITAD pipeline generation and expansion within existing accounts'], krDone:[false,false,false,false,false,false]},
-  {id:2, title:'Generate initial enterprise pipeline through relationship-led sales', priority:'Enterprise', status:'not-started', timeframe:'Q', critical:false, krs:['Build $500K–$1M qualified enterprise ITAD pipeline (scoped opportunities with defined assets, stakeholders, and solution fit)','Generate 5–8 qualified enterprise opportunities (SQLs)','Advance 2-3 opportunities to proposal / SOW stage','Source ≥60% of pipeline from existing relationships and warm introductions','Define 2–3 repeatable enterprise deal archetypes'], krDone:[false,false,false,false,false]},
-  {id:3, title:'Execute targeted, account-based GTM motion to deepen enterprise engagement', priority:'Enterprise', status:'not-started', timeframe:'Q', critical:false, krs:['Activate 12–20 high-value target accounts from RETIRE IT + existing relationships','Conduct 10–15 executive-level discovery and solutioning conversations','Generate 15–25 high-value account engagements with defined next steps','Convert ≥50% of engagements into next-step meetings or active opportunities','Identify key conference and sponsorship schedules','Publish thought leadership ITAD pieces'], krDone:[false,false,false,false,false,false]},
-  {id:4, title:'Build operational and commercial readiness for Q4 conversion', priority:'RL/ITAD', status:'not-started', timeframe:'Q', critical:false, krs:['Finalize pricing model with existing Retire-IT – targeting ~50% GM','Build cost targets for all ITAD outsourcing elements (logistics, processing)','Complete Retire-IT Salesforce and Veridy training','Set up pipeline tracking and reporting in Retire-IT Salesforce','Run 1–2 pilot scenarios or deal simulations'], krDone:[false,false,false,false,false]},
-]};
-
-state['john'] = { scorecard: JSON.parse(JSON.stringify(SCORECARD_TEMPLATE)), okrs: [
-  {id:0, title:'Position Telamon as a preferred delivery partner for EPC firms', priority:'AI Infra', status:'not-started', timeframe:'Q', critical:false, krs:['Identify and leverage potential relationships Vince may have by middle of Q3','Secure meetings with at least 2 target EPCs by end of Q3','Submit proposals on at least 2 EPC-led opportunities by end of Q3','Achieve first booked revenue from an EPC partner by end of Q4'], krDone:[false,false,false,false]},
-  {id:1, title:'Establish Telamon as an active delivery partner for Meta', priority:'AI Infra', status:'not-started', timeframe:'Q', critical:false, krs:['Secure countersigned PSA with Meta by end of Q3','Align with Matt Wurster\'s team on defined role as overflow or supplemental delivery partner by end of Q3','Identify and leverage potential relationships Vince may have by middle of Q3','Achieve first booked revenue from Meta within 30 days of initial MSOW execution'], krDone:[false,false,false,false]},
-  {id:2, title:'Close the program leadership gap and drive consistent execution across priority pursuits', priority:'E2E Systems', status:'not-started', timeframe:'Q', critical:false, krs:['Assign an Ops Lead to 100% of priority pursuits at Go decision, effective immediately','Generate $20M pipeline tied to bundled, end-to-end solutions by end of Q3','Close 1 new enterprise deals that include two service lines/opco by end of Q3'], krDone:[false,false,false]},
-  {id:3, title:'Improve pipeline deal profitability', priority:'E2E Systems', status:'not-started', timeframe:'Q', critical:false, krs:['Increase average deal margin for services by 200 basis points by end of Q3','Generate $20M pipeline tied to bundled, end-to-end solutions by end of Q3','Close 1 new enterprise deals that include two service lines/opco by end of Q3'], krDone:[false,false,false]},
-  {id:4, title:'Define and implement a Customer Scorecard process', priority:'E2E Systems', status:'not-started', timeframe:'Q', critical:false, krs:['Align framework and approach with Operations by end month 2','Finalize scorecard and present for executive approval by end of month 2','Launch scorecard process and complete initial set of scorecards by end of Q3','Establish executive review cadence by end of Q3'], krDone:[false,false,false,false]},
-  {id:5, title:'Backfill retiring KAM role', priority:'Enterprise', status:'not-started', timeframe:'Q', critical:false, krs:['Hire and onboard successor within 60 days','Complete transition of accounts and active pipeline before departure','Conduct customer introductions across top accounts prior to transition','Establish clear ownership and next steps on 100% of active deals prior to departure'], krDone:[false,false,false,false]},
-]};
-
-state['roger'] = { scorecard: JSON.parse(JSON.stringify(SCORECARD_TEMPLATE)), okrs: [
-  {id:1, title:'Shelter production readiness', priority:'AI Infra', status:'not-started', timeframe:'Q', critical:false, krs:['Denton facility fully operational by June 30 (staffing complete, production workflow established, and line capable of sustained output)','100% of long-lead and critical materials received or committed with confirmed delivery dates aligned to production schedule','First production run initiated by June 30 (initial units in build on production line)'], krDone:[false,false,false]},
-  {id:2, title:'Expand Shelter Demand', priority:'AI Infra', status:'not-started', timeframe:'Q', critical:false, krs:['Secure at least 1 additional contracted or awarded shelter/infrastructure customer','Advance 2+ opportunities to late-stage pipeline (proposal submitted or in final negotiation)','Align Sales teams on shelter GTM strategy with active pursuit of identified target accounts'], krDone:[false,false,false]},
-  {id:3, title:'Diversify Engr/Site Dev beyond Wireless', priority:'AI Infra', status:'not-started', timeframe:'Q', critical:false, krs:['Secure large volumes of ILA Site Acquisition / A&E awards from Lumen, Zayo, or other ILA / EDC deployments','Achieve total awarded work in Q3 with projected gross margin sufficient to replace Samsung Engineering run-rate exiting Q3'], krDone:[false,false]},
-]};
-
-state['vince'] = { scorecard: JSON.parse(JSON.stringify(SCORECARD_TEMPLATE)), okrs: [
-  {id:1, title:'Update Marketing Material', priority:'AI Infra', status:'not-started', timeframe:'Q', critical:false, krs:['Complete marketing material updates for full Site Dev / Eng / OSP / Last Mile & MPOE capabilities','Complete marketing material updates for full ISP – DC Campus capabilities','Launch updated Data Center capabilities video'], krDone:[false,false,false]},
-  {id:2, title:'Secure Approved Vendor Status with General Contractors & Neo / Hyperscale Clients', priority:'AI Infra', status:'not-started', timeframe:'Q', critical:false, krs:['Achieve Approved Vendor status with (2) target Neo / Hyperscale clients and (2) Tier-1 General Contractors by clearing all compliance, safety, and financial audits','Generate a minimum of (2) large project bids, specifically within the AI-infrastructure pipeline, to leverage our newly secured vendor status and to establish a baseline for recurring revenue'], krDone:[false,false]},
-  {id:3, title:'Onboard & Train Critical Initial New Hires', priority:'AI Infra', status:'not-started', timeframe:'Q', critical:false, krs:['Force multiplier roles: focused on technical governance, relationship management, and project leadership','Exact roles TBD: BD / Sales lead, Director of Construction, Estimating Manager, QA/QC, Vendor & Logistics Coordinator'], krDone:[false,false]},
-  {id:4, title:'Qualified & Scalable Subcontractor Workforce', priority:'AI Infra', status:'not-started', timeframe:'Q', critical:false, krs:['Fully vet & onboard additional regional ISP installation crews with proven experience in mission-critical data centers','Verify outsourced partners have active industry-standard certifications'], krDone:[false,false]},
-  {id:5, title:'(Q4-Q1 \'27): Project Management & Customer Delivery Platform', priority:'E2E Systems', status:'not-started', timeframe:'Annual', critical:false, krs:['Implementation of a Single Source of Truth for project delivery','Platform captures subcontractor output in real-time for client visibility','Process set to drive 100% On-Site MOP Compliance Enforcement','Real time quality audits','Zero-lag digital handoffs','Subcontractor efficiency optimization'], krDone:[false,false,false,false,false,false]},
-]};
-
-// Alex's OKRs — visible on dashboard to all direct reports
-state['alex'] = {
-  okrs: [
-    {id:1, title:'Drive Telecom division to $XXM revenue target', priority:'RL/ITAD', status:'not-started', krs:['Define revenue targets per business unit','Monthly pipeline reviews with all VPs','Quarterly board reporting'], krDone:[false,false,false], timeframe:'Annual', critical:true},
-    {id:2, title:'Implement Customer Scorecard across all business units', priority:'Enterprise', status:'not-started', krs:['Approve final scorecard template','Roll out to all 9 VPs by Q3','Link completion to commission process'], krDone:[false,false,false], timeframe:'Q', critical:true},
-    {id:3, title:'Build E2E operational visibility across supply chain', priority:'E2E Systems', status:'not-started', krs:['Define KPIs with Bryan and Travis','Dashboard live by end of Q2','Weekly ops review cadence established'], krDone:[false,false,false], timeframe:'Annual', critical:false},
-  ],
-  scorecard: {}
-};
-
-
+PEOPLE.forEach(p => {
+  state[p.id] = {
+    okrs: defaultOKRs(p.id).map(o => ({...o, krDone: o.krs.map(()=>false)})),
+    scorecard: {
+      project: {customer:'',projectName:'',projectType:'',projectValue:'',plannedDate:'',actualDate:'',pm:'',sponsor:''},
+      sections: {
+        delivery: {schedule:{score:'',notes:'',drivers:''},budget:{score:'',notes:''}},
+        quality:  {install:{score:'',defect:'',rework:'',firstPass:''},safety:{score:'',incidents:'',nearMiss:''},technical:{score:'',notes:''}},
+        cx:       {comm:{score:'',notes:''},responsiveness:{score:'',notes:''},trust:{score:'',notes:''},quote:''},
+      }
+    }
+  };
+});
 
 let currentPerson = null;
 let currentTab = 'okr';
@@ -508,70 +422,7 @@ function closeMenu() {
 }
 document.addEventListener('click', closeMenu);
 
-// ── ALEX'S OKRs (visible on dashboard to all) ─────────────────────────────────
-let alexOKRsVisible = true;
-
-function toggleAlexOKRs() {
-  alexOKRsVisible = !alexOKRsVisible;
-  document.getElementById('alex-okrs-body').style.display = alexOKRsVisible ? 'block' : 'none';
-  document.getElementById('alex-toggle-btn').textContent = alexOKRsVisible ? 'Hide ▲' : 'Show ▼';
-}
-
-function renderAlexOKRs() {
-  const list = document.getElementById('alex-okrs-list');
-  if(!list) return;
-  const okrs = state['alex'] ? state['alex'].okrs : [];
-  if(!okrs.length) {
-    list.innerHTML = `<div style="color:rgba(255,255,255,0.45);font-size:13px;padding:8px 0;">No objectives added yet — click "+ Add Alex's Objective" below.</div>`;
-    return;
-  }
-  list.innerHTML = okrs.map(o => {
-    const done = o.krDone ? o.krDone.filter(Boolean).length : 0;
-    const total = o.krs ? o.krs.length : 0;
-    const pct = total ? Math.round(done/total*100) : 0;
-    const isCritical = o.critical;
-    const timeframe = o.timeframe || 'Q';
-    const pr = PRIORITIES[o.priority] || PRIORITIES[Object.keys(PRIORITIES)[0]];
-    return `<div style="background:rgba(255,255,255,0.10);border:1px solid ${isCritical ? 'var(--scarlet)' : 'rgba(255,255,255,0.15)'};border-radius:8px;padding:14px;${isCritical ? 'box-shadow:0 0 0 1px var(--scarlet);' : ''}">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">
-        <div style="font-size:12px;font-weight:600;color:#fff;line-height:1.4;flex:1;">${o.title}</div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-          ${isCritical ? `<span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:rgba(254,57,31,0.25);color:var(--scarlet);border:1px solid var(--scarlet);">🔴 Critical</span>` : `<span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);">Non-Critical</span>`}
-          <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);">${timeframe === 'Q' ? '📅 Quarterly' : '📆 Annual'}</span>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-size:10px;padding:2px 7px;border-radius:3px;background:${pr.bg};color:${pr.color};font-weight:600;letter-spacing:.5px;">${o.priority}</span>
-        <span style="font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);">${STATUS_LABELS[o.status]||'Not Started'}</span>
-      </div>
-      <div style="height:3px;background:rgba(255,255,255,0.15);border-radius:2px;overflow:hidden;">
-        <div style="height:100%;width:${pct}%;background:${isCritical ? 'var(--scarlet)' : 'var(--mint)'};border-radius:2px;"></div>
-      </div>
-      <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;">${done}/${total} KRs · ${pct}%</div>
-    </div>`;
-  }).join('');
-}
-
-function addAlexOKR() {
-  if(!state['alex']) state['alex'] = {okrs:[], scorecard: state[PEOPLE[0].id].scorecard};
-  const okrs = state['alex'].okrs;
-  const newId = okrs.length ? Math.max(...okrs.map(o=>o.id))+1 : 0;
-  okrs.push({
-    id: newId,
-    title: 'New Objective — click person page to edit',
-    priority: Object.keys(PRIORITIES)[0],
-    status: 'not-started',
-    krs: ['Add a key result'],
-    krDone: [false],
-    timeframe: 'Q',
-    critical: false,
-  });
-  saveState();
-  renderAlexOKRs();
-  toast('Alex\'s objective added ✓');
-}
-
-
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
 function renderDash() {
   const stats = getOKRStats();
   document.getElementById('s-total').textContent = stats.total;
@@ -579,7 +430,6 @@ function renderDash() {
   document.getElementById('s-risk').textContent  = stats.risk;
   document.getElementById('s-behind').textContent= stats.behind;
   document.getElementById('s-ns').textContent    = stats.ns;
-  renderAlexOKRs();
 
   const grid = document.getElementById('person-grid');
   grid.innerHTML = PEOPLE.map(p => {
@@ -589,13 +439,10 @@ function renderDash() {
       const done = o.krDone.filter(Boolean).length;
       const total = o.krs.length;
       const pct = total ? Math.round(done/total*100) : 0;
-      const pr = PRIORITIES[o.priority] || PRIORITIES[Object.keys(PRIORITIES)[0]];
-      const criticalDot = o.critical ? `<span style="color:var(--scarlet);font-size:10px;" title="Critical">🔴</span>` : '';
-      const timeBadge = o.timeframe === 'Annual' ? `<span style="font-size:9px;color:var(--muted2);">📆</span>` : `<span style="font-size:9px;color:var(--muted2);">📅</span>`;
+      const pr = PRIORITIES[o.priority] || PRIORITIES['Enterprise'];
       return `<div class="okr-mini-row">
         <div class="priority-pip" style="background:${pr.color}"></div>
         <div class="okr-mini-label">${o.title}</div>
-        ${criticalDot}${timeBadge}
         <div class="status-pip" style="background:${statusColor(o.status)}"></div>
         <div class="mini-bar-wrap"><div class="mini-bar" style="width:${pct}%;background:${statusColor(o.status)}"></div></div>
         <div class="score-chip">${pct}%</div>
@@ -678,10 +525,7 @@ function renderOKRTab() {
           style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:14px;padding:0 4px;flex-shrink:0;line-height:1;transition:color .15s;"
           onmouseover="this.style.color='var(--behind)'" onmouseout="this.style.color='var(--muted2)'">×</button>
       </div>`).join('');
-    const isCritical = o.critical || false;
-    const timeframe = o.timeframe || 'Q';
-    const criticalBorder = isCritical ? 'border-left:3px solid var(--scarlet);' : 'border-left:3px solid transparent;';
-    return `<div class="obj-card" data-oid="${o.id}" style="${criticalBorder}">
+    return `<div class="obj-card" data-oid="${o.id}">
       <div class="obj-top">
         <div class="obj-left">
           <div class="obj-num" style="display:flex;align-items:center;gap:8px;">
@@ -703,13 +547,6 @@ function renderOKRTab() {
           <div style="position:relative">
             <button class="${badgeClass(o.status)}" data-oid="${o.id}" onclick="openStatusMenu(event,${o.id})">${STATUS_LABELS[o.status]}</button>
           </div>
-          <!-- TIMEFRAME TOGGLE -->
-          <div style="display:flex;border:1px solid var(--border2);border-radius:5px;overflow:hidden;margin-top:2px;">
-            <button onclick="setTimeframe(event,${o.id},'Q')" style="padding:3px 9px;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;transition:all .15s;background:${timeframe==='Q'?'var(--plum)':'transparent'};color:${timeframe==='Q'?'#fff':'var(--muted)'};">📅 Q</button>
-            <button onclick="setTimeframe(event,${o.id},'Annual')" style="padding:3px 9px;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;border-left:1px solid var(--border2);cursor:pointer;transition:all .15s;background:${timeframe==='Annual'?'var(--plum)':'transparent'};color:${timeframe==='Annual'?'#fff':'var(--muted)'};">📆 Annual</button>
-          </div>
-          <!-- CRITICAL TOGGLE -->
-          <button onclick="toggleCritical(event,${o.id})" style="margin-top:2px;padding:3px 9px;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;border-radius:5px;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;transition:all .15s;border:1px solid ${isCritical?'var(--scarlet)':'var(--border2)'};background:${isCritical?'rgba(254,57,31,0.08)':'transparent'};color:${isCritical?'var(--scarlet)':'var(--muted)'};">${isCritical?'🔴 Critical':'⚪ Non-Critical'}</button>
         </div>
       </div>
       <div class="kr-list" data-oid="${o.id}">
@@ -817,19 +654,7 @@ function addKR(input) {
   }
 }
 
-function setTimeframe(e, oid, val) {
-  e.stopPropagation();
-  const okr = state[currentPerson].okrs.find(o=>o.id===oid);
-  if(okr) { okr.timeframe = val; saveState(); renderPersonContent(); renderDash(); }
-}
-
-function toggleCritical(e, oid) {
-  e.stopPropagation();
-  const okr = state[currentPerson].okrs.find(o=>o.id===oid);
-  if(okr) { okr.critical = !okr.critical; saveState(); renderPersonContent(); renderDash(); toast(okr.critical ? '🔴 Marked Critical' : 'Marked Non-Critical'); }
-}
-
-
+function addObjective() {
   const okrs = state[currentPerson].okrs;
   const newId = okrs.length ? Math.max(...okrs.map(o=>o.id))+1 : 0;
   okrs.push({
@@ -1524,14 +1349,10 @@ document.addEventListener('input', function(e) {
 });
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-// Clear old localStorage so fresh hardcoded data always loads
-localStorage.removeItem('telamon-okr-state');
-localStorage.removeItem('telamon-exec-okr-state');
-// Always show dashboard immediately — no sign-in required
-document.getElementById('signin-screen').style.display = 'none';
+loadLocalState();   // instant render from cache
 showDash();
 if(SP_CONFIGURED) {
-  initMSAL();
+  initMSAL();       // then authenticate & load from SharePoint
 }
 </script>
 </body>
