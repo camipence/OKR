@@ -1527,7 +1527,8 @@ document.addEventListener('input', function(e) {
 // Clear old localStorage so fresh hardcoded data always loads
 localStorage.removeItem('telamon-okr-state');
 localStorage.removeItem('telamon-exec-okr-state');
-loadLocalState();
+// Always show dashboard immediately — no sign-in required
+document.getElementById('signin-screen').style.display = 'none';
 showDash();
 if(SP_CONFIGURED) {
   initMSAL();
